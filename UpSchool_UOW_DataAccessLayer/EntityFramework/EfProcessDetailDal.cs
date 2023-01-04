@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,10 +15,17 @@ namespace UpSchool_UOW_DataAccessLayer.EntityFramework
     public class EfProcessDetailDal : GenericRepository<ProcessDetail>,IProcessDetailDal
     {
         //her bir entity için efdal sınıfında bu işlem yapılır
-        public EfProcessDetailDal(Context context) : base(context)
-        {
+        private IServiceProvider _serviceProvider;
 
+
+
+        public EfProcessDetailDal(Context context, IServiceProvider serviceProvider) : base(context)
+        {
+            _serviceProvider = serviceProvider;
         }
 
+      
+
+        
     }
 }

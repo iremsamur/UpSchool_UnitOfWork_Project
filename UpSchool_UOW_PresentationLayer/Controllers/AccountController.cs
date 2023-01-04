@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UpSchool_UOW_BusinessLayer.Abstract;
@@ -12,10 +13,12 @@ namespace UpSchool_UOW_PresentationLayer.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
+        private readonly IProcessDetailService _processDetailService;
 
-        public AccountController(IAccountService accountService)
+        public AccountController(IAccountService accountService, IProcessDetailService processDetailService)
         {
             this._accountService = accountService;
+            this._processDetailService = processDetailService;
         }
 
         [HttpGet]
@@ -28,17 +31,29 @@ namespace UpSchool_UOW_PresentationLayer.Controllers
         {
             var value1 = _accountService.TGetByID(p.SenderID);
             var value2 = _accountService.TGetByID(p.ReceiverID);
-            
-            value1.AccountBalance -= p.Amount;//girilen miktar kadar düşer
-            value2.AccountBalance += p.Amount;//girilen miktar buna eklenir.ç Yani birinin gönderdiği para ondan eksilir diğerine o para geçer
-            //multipupdate metodu bu sebeple kullanılır. Aynı anda çoklu
-            //işlemi yapabilmek için
-            List<Account> modifiedAccounts = new List<Account>()
+
+            if (value1.AccountBalance > p.Amount)
+            {
+                value1.AccountBalance -= p.Amount;//girilen miktar kadar düşer
+                value2.AccountBalance += p.Amount;//girilen miktar buna eklenir.ç Yani birinin gönderdiği para ondan eksilir diğerine o para geçer
+                                                  //multipupdate metodu bu sebeple kullanılır. Aynı anda çoklu
+                                                  //işlemi yapabilmek için
+                List<Account> modifiedAccounts = new List<Account>()
             {
                 value1,
                 value2
             };
-            _accountService.TMultiUpdate(modifiedAccounts);//aynı anda iiki tarafında hem parayı gönderen hem alan değerlerini güncellemeyi sağlar.
+
+                ProcessDetail detail = new ProcessDetail();
+                detail.SenderName = value1.AccountName;
+                detail.ReceiverName = value2.AccountName;
+                detail.ProcessDate = DateTime.Parse(DateTime.Now.ToShortDateString());
+                detail.Amount = p.Amount;
+                _processDetailService.TInsert(detail);
+                _accountService.TMultiUpdate(modifiedAccounts);//aynı anda iiki tarafında hem parayı gönderen hem alan değerlerini güncellemeyi sağlar.
+            }
+            
+            
 
 
 
